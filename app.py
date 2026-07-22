@@ -24,15 +24,17 @@ def fetch_live_prices():
     """Fetch last 4 monthly closes for LE=F, GF=F, ZC=F from yfinance."""
     defaults = {"le": [248.25, 258.20, 226.68, 220.35], "gf": [295.0, 290.0], "corn": [480.0, 475.0]}
     try:
-        le   = yf.download("LE=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
-        gf   = yf.download("GF=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
-        corn = yf.download("ZC=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+        le_raw = yf.download("LE=F", period="12mo", interval="1mo", progress=False, auto_adjust=True).dropna()
+        gf     = yf.download("GF=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+        corn   = yf.download("ZC=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+
+        le         = le_raw["Close"]
+        month_open = round(float(le_raw["Open"].iloc[-1]), 2) if not le_raw.empty else None
 
         def last_n(series, n):
             vals = series.squeeze().tolist()
             if len(vals) == 0:
                 return None
-            # pad with first value if not enough history
             while len(vals) < n:
                 vals.insert(0, vals[0])
             return [round(v, 2) for v in vals[-n:]]
@@ -40,9 +42,6 @@ def fetch_live_prices():
         le_vals   = last_n(le,   4)
         gf_vals   = last_n(gf,   2)
         corn_vals = last_n(corn, 2)
-
-        le_open = yf.download("LE=F", period="1mo", interval="1mo", progress=False, auto_adjust=True)
-        month_open = round(float(le_open["Open"].iloc[-1]), 2) if not le_open.empty else None
 
         return {
             "le":         le_vals   or defaults["le"],
