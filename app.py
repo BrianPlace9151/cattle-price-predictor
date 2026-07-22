@@ -21,37 +21,25 @@ def load_artifacts():
 
 @st.cache_data(ttl=3600)
 def fetch_live_prices():
-    """Fetch last 4 monthly closes for LE=F, GF=F, ZC=F from yfinance."""
-    defaults = {"le": [248.25, 258.20, 226.68, 220.35], "gf": [295.0, 290.0], "corn": [480.0, 475.0]}
+    defaults = {"le": [248.25, 258.20, 226.68, 220.35], "gf": [295.0, 290.0], "corn": [480.0, 475.0], "month_open": 243.0, "live": False}
     try:
-        le_raw = yf.download("LE=F", period="12mo", interval="1mo", progress=False, auto_adjust=True).dropna()
-        gf     = yf.download("GF=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
-        corn   = yf.download("ZC=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
-
-        le         = le_raw["Close"]
-        month_open = round(float(le_raw["Open"].iloc[-1]), 2) if not le_raw.empty else None
-
-        def last_n(series, n):
-            vals = series.squeeze().tolist()
-            if len(vals) == 0:
-                return None
+        def get_monthly(ticker, n):
+            df = yf.Ticker(ticker).history(period="12mo", interval="1mo")
+            close = df["Close"].dropna()
+            vals  = close.tolist()
             while len(vals) < n:
                 vals.insert(0, vals[0])
-            return [round(v, 2) for v in vals[-n:]]
+            return [round(v, 2) for v in vals[-n:]], df
 
-        le_vals   = last_n(le,   4)
-        gf_vals   = last_n(gf,   2)
-        corn_vals = last_n(corn, 2)
+        le_vals,   le_df   = get_monthly("LE=F", 4)
+        gf_vals,   _       = get_monthly("GF=F", 2)
+        corn_vals, _       = get_monthly("ZC=F", 2)
 
-        return {
-            "le":         le_vals   or defaults["le"],
-            "gf":         gf_vals   or defaults["gf"],
-            "corn":       corn_vals or defaults["corn"],
-            "month_open": month_open,
-            "live":       True,
-        }
-    except Exception:
-        return {**defaults, "month_open": None, "live": False}
+        month_open = round(float(le_df["Open"].iloc[-1]), 2) if not le_df.empty else defaults["month_open"]
+
+        return {"le": le_vals, "gf": gf_vals, "corn": corn_vals, "month_open": month_open, "live": True}
+    except Exception as e:
+        return defaults
 
 try:
     model, scaler, feature_cols, feature_medians = load_artifacts()
