@@ -21,16 +21,21 @@ def load_artifacts():
 
 @st.cache_data(ttl=3600)
 def fetch_live_prices():
-    """Fetch last 3 monthly closes for LE=F, GF=F, ZC=F from yfinance."""
-    defaults = {"le": [228.0, 225.0, 220.0, 200.0], "gf": [355.0, 350.0], "corn": [430.0, 425.0]}
+    """Fetch last 4 monthly closes for LE=F, GF=F, ZC=F from yfinance."""
+    defaults = {"le": [248.25, 258.20, 226.68, 220.35], "gf": [295.0, 290.0], "corn": [480.0, 475.0]}
     try:
-        le   = yf.download("LE=F", period="6mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
-        gf   = yf.download("GF=F", period="6mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
-        corn = yf.download("ZC=F", period="6mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+        le   = yf.download("LE=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+        gf   = yf.download("GF=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+        corn = yf.download("ZC=F", period="12mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
 
         def last_n(series, n):
             vals = series.squeeze().tolist()
-            return [round(v, 2) for v in vals[-n:]] if len(vals) >= n else None
+            if len(vals) == 0:
+                return None
+            # pad with first value if not enough history
+            while len(vals) < n:
+                vals.insert(0, vals[0])
+            return [round(v, 2) for v in vals[-n:]]
 
         le_vals   = last_n(le,   4)
         gf_vals   = last_n(gf,   2)
@@ -40,9 +45,10 @@ def fetch_live_prices():
             "le":   le_vals   or defaults["le"],
             "gf":   gf_vals   or defaults["gf"],
             "corn": corn_vals or defaults["corn"],
+            "live": True,
         }
     except Exception:
-        return defaults
+        return {**defaults, "live": False}
 
 try:
     model, scaler, feature_cols, feature_medians = load_artifacts()
@@ -51,9 +57,12 @@ except FileNotFoundError as e:
     st.stop()
 
 prices = fetch_live_prices()
-le_d   = prices["le"]    # [3mo ago, 2mo ago, last mo, 12mo avg proxy]
-gf_d   = prices["gf"]    # [2mo ago, last mo]
-corn_d = prices["corn"]  # [2mo ago, last mo]
+le_d   = prices["le"]
+gf_d   = prices["gf"]
+corn_d = prices["corn"]
+
+if not prices.get("live"):
+    st.warning("⚠️ Could not fetch live prices — showing recent defaults. Update sidebar inputs manually.")
 
 # ── Sidebar inputs ─────────────────────────────────────────────────────────────
 st.sidebar.header("Market Inputs")
