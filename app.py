@@ -41,14 +41,18 @@ def fetch_live_prices():
         gf_vals   = last_n(gf,   2)
         corn_vals = last_n(corn, 2)
 
+        le_open = yf.download("LE=F", period="1mo", interval="1mo", progress=False, auto_adjust=True)
+        month_open = round(float(le_open["Open"].iloc[-1]), 2) if not le_open.empty else None
+
         return {
-            "le":   le_vals   or defaults["le"],
-            "gf":   gf_vals   or defaults["gf"],
-            "corn": corn_vals or defaults["corn"],
-            "live": True,
+            "le":         le_vals   or defaults["le"],
+            "gf":         gf_vals   or defaults["gf"],
+            "corn":       corn_vals or defaults["corn"],
+            "month_open": month_open,
+            "live":       True,
         }
     except Exception:
-        return {**defaults, "live": False}
+        return {**defaults, "month_open": None, "live": False}
 
 try:
     model, scaler, feature_cols, feature_medians = load_artifacts()
@@ -56,10 +60,11 @@ except FileNotFoundError as e:
     st.error(f"Model file not found: {e}. Run the notebook first to generate .pkl files.")
     st.stop()
 
-prices = fetch_live_prices()
-le_d   = prices["le"]
-gf_d   = prices["gf"]
-corn_d = prices["corn"]
+prices     = fetch_live_prices()
+le_d       = prices["le"]
+gf_d       = prices["gf"]
+corn_d     = prices["corn"]
+month_open = prices.get("month_open")
 
 if not prices.get("live"):
     st.warning("⚠️ Could not fetch live prices — showing recent defaults. Update sidebar inputs manually.")
@@ -150,11 +155,12 @@ st.subheader("Inputs Summary")
 col1, col2 = st.columns(2)
 
 with col1:
+    month_open_row = f"| {datetime.now().strftime('%b 1, %Y')} Open Price | {month_open:.2f} ¢/lb |\n" if month_open else ""
     st.markdown(f"""
 | Input | Value |
 |-------|-------|
 | Live Cattle — Current Price | {le_1:.2f} ¢/lb |
-| Live Cattle — 2 Months Ago | {le_2:.2f} ¢/lb |
+{month_open_row}| Live Cattle — 2 Months Ago | {le_2:.2f} ¢/lb |
 | Live Cattle — 12-Mo Avg | {le_12m:.2f} ¢/lb |
 | Feeder Cattle — Current Price | {gf_1:.2f} ¢/lb |
 | Corn — Current Price | {corn_1:.1f} ¢/bu |
