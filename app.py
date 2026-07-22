@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import yfinance as yf
 from datetime import datetime
 
 st.set_page_config(page_title="Live Cattle Price Predictor", page_icon="🐄", layout="wide")
@@ -18,15 +19,45 @@ def load_artifacts():
     feature_medians = joblib.load("feature_medians.pkl")
     return model, scaler, feature_cols, feature_medians
 
+@st.cache_data(ttl=3600)
+def fetch_live_prices():
+    """Fetch last 3 monthly closes for LE=F, GF=F, ZC=F from yfinance."""
+    defaults = {"le": [228.0, 225.0, 220.0, 200.0], "gf": [355.0, 350.0], "corn": [430.0, 425.0]}
+    try:
+        le   = yf.download("LE=F", period="6mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+        gf   = yf.download("GF=F", period="6mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+        corn = yf.download("ZC=F", period="6mo", interval="1mo", progress=False, auto_adjust=True)["Close"].dropna()
+
+        def last_n(series, n):
+            vals = series.squeeze().tolist()
+            return [round(v, 2) for v in vals[-n:]] if len(vals) >= n else None
+
+        le_vals   = last_n(le,   4)
+        gf_vals   = last_n(gf,   2)
+        corn_vals = last_n(corn, 2)
+
+        return {
+            "le":   le_vals   or defaults["le"],
+            "gf":   gf_vals   or defaults["gf"],
+            "corn": corn_vals or defaults["corn"],
+        }
+    except Exception:
+        return defaults
+
 try:
     model, scaler, feature_cols, feature_medians = load_artifacts()
 except FileNotFoundError as e:
     st.error(f"Model file not found: {e}. Run the notebook first to generate .pkl files.")
     st.stop()
 
+prices = fetch_live_prices()
+le_d   = prices["le"]    # [3mo ago, 2mo ago, last mo, 12mo avg proxy]
+gf_d   = prices["gf"]    # [2mo ago, last mo]
+corn_d = prices["corn"]  # [2mo ago, last mo]
+
 # ── Sidebar inputs ─────────────────────────────────────────────────────────────
 st.sidebar.header("Market Inputs")
-st.sidebar.caption("Enter current data to generate a 1-month forecast")
+st.sidebar.caption("Defaults auto-populated from live CME prices via yfinance")
 
 st.sidebar.subheader("📅 Forecast Month")
 pred_month = st.sidebar.selectbox(
@@ -37,14 +68,14 @@ pred_month = st.sidebar.selectbox(
 )
 
 st.sidebar.subheader("💰 Recent Prices")
-le_1   = st.sidebar.number_input("Live Cattle — Last Month (¢/lb)",        80.0, 280.0, 228.0, step=0.5)
-le_2   = st.sidebar.number_input("Live Cattle — 2 Months Ago (¢/lb)",      80.0, 280.0, 225.0, step=0.5)
-le_3   = st.sidebar.number_input("Live Cattle — 3 Months Ago (¢/lb)",      80.0, 280.0, 220.0, step=0.5)
-le_12m = st.sidebar.number_input("Live Cattle — 12-Mo Avg (¢/lb)",         80.0, 280.0, 200.0, step=0.5)
-gf_1   = st.sidebar.number_input("Feeder Cattle — Last Month (¢/lb)",      90.0, 380.0, 355.0, step=0.5)
-gf_2   = st.sidebar.number_input("Feeder Cattle — 2 Months Ago (¢/lb)",    90.0, 380.0, 350.0, step=0.5)
-corn_1 = st.sidebar.number_input("Corn — Last Month (¢/bu)",               150.0, 900.0, 430.0, step=1.0)
-corn_2 = st.sidebar.number_input("Corn — 2 Months Ago (¢/bu)",             150.0, 900.0, 425.0, step=1.0)
+le_1   = st.sidebar.number_input("Live Cattle — Last Month (¢/lb)",        80.0, 320.0, float(le_d[-1]),   step=0.5)
+le_2   = st.sidebar.number_input("Live Cattle — 2 Months Ago (¢/lb)",      80.0, 320.0, float(le_d[-2]),   step=0.5)
+le_3   = st.sidebar.number_input("Live Cattle — 3 Months Ago (¢/lb)",      80.0, 320.0, float(le_d[-3]),   step=0.5)
+le_12m = st.sidebar.number_input("Live Cattle — 12-Mo Avg (¢/lb)",         80.0, 320.0, float(le_d[-4]),   step=0.5)
+gf_1   = st.sidebar.number_input("Feeder Cattle — Last Month (¢/lb)",      90.0, 420.0, float(gf_d[-1]),   step=0.5)
+gf_2   = st.sidebar.number_input("Feeder Cattle — 2 Months Ago (¢/lb)",    90.0, 420.0, float(gf_d[-2]),   step=0.5)
+corn_1 = st.sidebar.number_input("Corn — Last Month (¢/bu)",               150.0, 900.0, float(corn_d[-1]), step=1.0)
+corn_2 = st.sidebar.number_input("Corn — 2 Months Ago (¢/bu)",             150.0, 900.0, float(corn_d[-2]), step=1.0)
 
 st.sidebar.subheader("🐮 Supply (Last Month)")
 beef_prod  = st.sidebar.number_input("Beef Production (mil lbs)",           1500.0, 2800.0, 2200.0, step=10.0)
@@ -134,4 +165,4 @@ with col2:
 """)
 
 st.markdown("---")
-st.caption("Model: Ridge/Lasso Regression | Data: USDA ERS + CME Futures + USDA NASS | CRISP-DM Capstone — Brian Place")
+st.caption("Prices auto-fetched from CME via yfinance · Refreshed hourly · Model: Ridge/Lasso Regression | Data: USDA ERS + CME Futures | CRISP-DM Capstone — Brian Place")
