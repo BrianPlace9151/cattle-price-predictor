@@ -153,11 +153,11 @@ with col1:
     st.markdown(f"""
 | Input | Value |
 |-------|-------|
-| Live Cattle lag-1 | {le_1:.2f} ¢/lb |
-| Live Cattle lag-2 | {le_2:.2f} ¢/lb |
-| Live Cattle 12-mo avg | {le_12m:.2f} ¢/lb |
-| Feeder Cattle lag-1 | {gf_1:.2f} ¢/lb |
-| Corn lag-1 | {corn_1:.1f} ¢/bu |
+| Live Cattle — Current Price | {le_1:.2f} ¢/lb |
+| Live Cattle — 2 Months Ago | {le_2:.2f} ¢/lb |
+| Live Cattle — 12-Mo Avg | {le_12m:.2f} ¢/lb |
+| Feeder Cattle — Current Price | {gf_1:.2f} ¢/lb |
+| Corn — Current Price | {corn_1:.1f} ¢/bu |
 | Feed Cost Ratio | {corn_1/le_1:.3f} |
 """)
 
