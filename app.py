@@ -155,17 +155,17 @@ st.subheader("Inputs Summary")
 col1, col2 = st.columns(2)
 
 with col1:
-    month_open_row = f"| {datetime.now().strftime('%b 1, %Y')} Open Price | {month_open:.2f} ¢/lb |\n" if month_open else ""
-    st.markdown(f"""
-| Input | Value |
-|-------|-------|
-| Live Cattle — Current Price | {le_1:.2f} ¢/lb |
-{month_open_row}| Live Cattle — 2 Months Ago | {le_2:.2f} ¢/lb |
-| Live Cattle — 12-Mo Avg | {le_12m:.2f} ¢/lb |
-| Feeder Cattle — Current Price | {gf_1:.2f} ¢/lb |
-| Corn — Current Price | {corn_1:.1f} ¢/bu |
-| Feed Cost Ratio | {corn_1/le_1:.3f} |
-""")
+    month_open_row = f"| {datetime.now().strftime('%b 1, %Y')} Open Price | {month_open:.2f} ¢/lb |" if month_open else ""
+    rows = "\n".join(filter(None, [
+        f"| Live Cattle — Current Price | {le_1:.2f} ¢/lb |",
+        month_open_row,
+        f"| Live Cattle — 2 Months Ago | {le_2:.2f} ¢/lb |",
+        f"| Live Cattle — 12-Mo Avg | {le_12m:.2f} ¢/lb |",
+        f"| Feeder Cattle — Current Price | {gf_1:.2f} ¢/lb |",
+        f"| Corn — Current Price | {corn_1:.1f} ¢/bu |",
+        f"| Feed Cost Ratio | {corn_1/le_1:.3f} |",
+    ]))
+    st.markdown(f"| Input | Value |\n|-------|-------|\n{rows}")
 
 with col2:
     st.markdown(f"""
