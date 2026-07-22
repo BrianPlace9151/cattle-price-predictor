@@ -142,7 +142,7 @@ st.subheader("Inputs Summary")
 col1, col2 = st.columns(2)
 
 with col1:
-    month_open_row = f"| {datetime.now().strftime('%b 1, %Y')} Open Price | {month_open:.2f} ¢/lb |" if month_open else ""
+    month_open_row = f"| Month Beginning Open Price | {month_open:.2f} ¢/lb |" if month_open else ""
     rows = "\n".join(filter(None, [
         f"| Live Cattle — Current Price | {le_1:.2f} ¢/lb |",
         month_open_row,
