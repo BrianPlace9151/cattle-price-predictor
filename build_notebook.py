@@ -6,7 +6,7 @@ Output: ~/Python/Capstone/beef_price_prediction_eda.ipynb
 
 import json, os
 
-OUT = os.path.expanduser('~/Python/Capstone/beef_price_prediction_eda.ipynb')
+OUT = os.path.expanduser('~/Python/Capstone/beef_price_prediction_Main.ipynb')
 
 def md(source):
     return {"cell_type": "markdown", "metadata": {}, "source": [source]}
@@ -133,7 +133,8 @@ plt.rcParams['axes.titlesize'] = 13
 plt.rcParams['axes.labelsize'] = 11
 
 DOWNLOADS  = os.path.expanduser('~/Downloads/')
-USDA_FILE  = DOWNLOADS + 'MeatStatsFull.xlsx'
+CAPSTONE   = os.path.expanduser('~/Python/Capstone/')
+USDA_FILE  = CAPSTONE + 'MeatStatsFull.xlsx'
 START_DATE = '2005-01-01'
 
 print("Libraries loaded.")
@@ -253,9 +254,9 @@ md("""---
 | **US Dollar Index (DXY)** | Export demand — strong dollar suppresses foreign beef buying | Medium |
 | **Choice Beef Cutout Value** | Packer margin — cutout premium drives cattle bid prices | Medium |"""),
 
-code("""COF_FILE     = os.path.expanduser('~/Python/Capstone/cattle_on_feed.csv')
+code("""COF_FILE     = CAPSTONE + 'cattle_on_feed.csv'
 COT_FILE     = DOWNLOADS + 'cftc_cot_cattle.csv'
-DXY_FILE     = os.path.expanduser('~/Python/Capstone/dollar_index.csv')
+DXY_FILE     = CAPSTONE + 'dollar_index.csv'
 CUTOUT_FILE  = DOWNLOADS + 'choice_cutout.csv'
 
 addl_available = {
@@ -372,9 +373,7 @@ else:
 
 # ── EDA ───────────────────────────────────────────────────────────────────────
 md("""---
-## Phase 2 (EDA): Target Variable — Live Cattle Futures
-
-### 3.1 Price History & Year-over-Year Change"""),
+### 2.8 Price History & Year-over-Year Change"""),
 
 code("""if futures is not None:
     fig, axes = plt.subplots(2, 1, figsize=(14, 9))
