@@ -1,4 +1,4 @@
-# US Live Cattle Futures Price Predictor
+# CME Live Cattle Futures Price Predictor
 
 **Author:** Brian Place
 **Target Variable:** CME Live Cattle Front-Month Futures (cents/lb)
@@ -78,8 +78,11 @@ Train/test R² gap of 0.398 signaled overfitting — this baseline was the bar s
 - Test period: Jan 2023 – present
 - Validation method: walk-forward (expanding-window) cross-validation
 
-## Initial Findings
-Based on trend chart comparisons and correlation matrix two of my features (Feeder Cattle and Corn) are strong and positive predictors for live cattle price 
+## Run Locally
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
 ## Project Structure
 | File | Description |
