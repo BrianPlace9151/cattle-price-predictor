@@ -78,6 +78,19 @@ Train/test R² gap of 0.398 signaled overfitting — this baseline was the bar s
 - Test period: Jan 2023 – present
 - Validation method: walk-forward (expanding-window) cross-validation
 
+## Key Findings (What This Means for You)
+- **This model is better at telling you *which way* prices will move than *exactly what* the price will be.** Asked to predict next month's price to the cent, it's off by about 7-9¢/lb on average — too imprecise to use as a firm budget number. Asked instead to predict whether the price will go up or down, it's right about 60% of the time, a real (if modest) edge over both a coin flip and over assuming "next month looks like last month."
+- **Cattle producers and meatpackers** (hedging, procurement timing) get the most practical value here: a consistent ~10-point edge in predicting direction, applied across many monthly hedge decisions, adds up — even though no single month's call is guaranteed.
+- **Food companies and traders** who need precise cost forecasts should treat this model's price output as a rough guide with a wide error band, not a standalone budget input, until accuracy improves.
+- **Two honest limitations to know about:** (1) the ~60% directional accuracy is close to, not decisively above, the 60% target — with only ~150-180 months of test data, it should be re-checked as more data comes in; (2) the model has only been tested through one market environment (2023-present) and its performance during a sharp shift, like a herd-rebuild cycle, is unproven.
+
+## Next Steps
+- **Improve accuracy:** the current price forecasts have a detectable, correctable pattern in their errors (statistically confirmed) that a follow-up model could capture; testing non-linear feature selection methods and reporting a price *range* instead of a single number are the next planned improvements.
+- **Automate new data:** most input data (USDA statistics, trader positioning, cutout values) is still downloaded and updated by hand each month; connecting directly to the USDA, CFTC, and market-data APIs that provide this data would let the model refresh itself automatically instead of depending on manual updates.
+- **Deployment best practices:** planned improvements include logging every prediction the app makes (so real-world accuracy can be tracked over time, not just backtested accuracy), collecting feedback from people using the forecasts, and scaling the hosting setup only if/when usage grows enough to require it.
+
+See the notebook's own **Next Steps** section (at the very end) for the full technical detail behind each of these.
+
 ## Run Locally
 ```bash
 pip install -r requirements.txt
@@ -95,6 +108,3 @@ streamlit run app.py
 | `feature_medians.pkl` | Feature medians for default inputs |
 | `requirements.txt` | Python dependencies |
 | `MeatStatsFull.xlsx`, `cattle_on_feed.csv`, `cftc_cot_cattle.csv`, `dollar_index.csv`, `choice_cutout.csv` | Raw input data |
-
-## Next Steps
-See the **Next Steps** section at the end of the notebook for planned work on improving accuracy, automating data ingestion, and deployment best practices (monitoring, logging, feedback loops, scalability).
