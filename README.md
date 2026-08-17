@@ -7,6 +7,9 @@
 ## Notebook
 [`beef_price_prediction_Main.ipynb`](beef_price_prediction_Main.ipynb) — full CRISP-DM notebook (business understanding, data prep, modeling, evaluation, deployment, and next steps).
 
+## Live App
+[cattle-price-predictor.streamlit.app](https://cattle-price-predictor-egbv7kyykepakqug4uf8by.streamlit.app) — try the deployed Streamlit predictor directly, no setup required.
+
 ## Problem Statement
 US Live Cattle Futures, traded on the Chicago Mercantile Exchange (CME) under ticker **LE**, are the benchmark price for fed cattle in North America. These prices are driven by an interplay of USDA-reported supply fundamentals, input costs, and macro demand signals.
 
